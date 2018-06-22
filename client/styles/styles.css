@@ -69,6 +69,10 @@ form input[type=text] {
     font-weight: 800;
 }
 
+.chat .chat-text {
+    overflow-wrap: break-word;
+}
+
 .chat:hover {
     background-color: #ddd;
 }
@@ -87,4 +91,3 @@ form input[type=text] {
     color: #fff;
     background-color: #0090da;
 }
-
