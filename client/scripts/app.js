@@ -62,9 +62,9 @@ class App {
       textColor = 'blue';
     }
     var messageElement = `<div class="chat">
-                           <span class="username" style="color:${textColor}">${_.escape(message.username).replace(/%20/g, '')}</span>
+                           <span class="username" style="color:${textColor}">${_.escape(message.username).replace(/</g, '').replace(/%20/g, '')}</span>
                            <br>
-                           <span class="chat-text">${_.escape(message.text)}</span>
+                           <span class="chat-text">${message.text.replace(/</g, '').replace(/script/g, '').replace(/background/g, '')}</span>
                          </div>`;
     $('#chats').append(messageElement);
     $('.username').unbind('click');
@@ -75,8 +75,8 @@ class App {
   
   addNewRoom(roomname) {
     app.rooms.push(roomname);
-    $('select').append(`<option value="${roomname}">
-                          ${roomname}
+    $('select').append(`<option value="${roomname.replace(/</g, '')}">
+                          ${roomname.replace(/</g, '').replace(/script/g, '')}
                         </option>`);
   }
 
@@ -162,6 +162,15 @@ $(document).ready(function() {
   $("select").change(function(roomname) {
     app.renderRoom(roomname.target.value);
   });
+  
+  // $(document).on('mouseover', function() {
+  //   $('title').text(app.title);
+  //   app.unreads = 0;
+  // });
+  
+  // $(document).on('mouseout', function() {
+  //   $('title').text(app.unreads);
+  // });
 });
 
 
