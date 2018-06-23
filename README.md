@@ -2,3 +2,4 @@
 
 ## complete handleUsernameClick()
 ## handle enter on input
+## change room
