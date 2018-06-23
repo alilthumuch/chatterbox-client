@@ -2,14 +2,16 @@ class App {
   constructor() {
     this.server = 'http://parse.sfm6.hackreactor.com/chatterbox/classes/messages';
     this.rooms = [];
-    this.options = {order: "-createdAt", limit: 100};
+    this.friends = [];
+    this.options = {order: "-createdAt", limit: 20};
   }
 
   init() {
-    app.fetch();
+    setInterval(function() {
+      app.fetch();
+    }, 1000);
   }
 
-  // adds a new message to messages
   send(message) {
     $.ajax({
       url: app.server,
@@ -25,7 +27,6 @@ class App {
     });
   }
 
-  // add messages to site
   fetch() {
     $.ajax({
       url: app.server,
@@ -36,7 +37,7 @@ class App {
         app.clearMessages();
         data.results.forEach(function(message) {
           if (!app.rooms.includes(message.roomname)) {
-            app.renderRoom(message);
+            app.addNewRoom(message.roomname);
           }
           app.renderMessage(message);
         });
@@ -53,11 +54,17 @@ class App {
 
   // adds message to html
   renderMessage(message) {
-    message.text = fixMessage(message.text);
+    var textColor = 'auto';
+    if (message.username === undefined) {
+      message.username = 'undefined';
+    }
+    if (app.friends.includes(_.escape(message.username.replace(/%20/g, ' ')))) {
+      textColor = 'blue';
+    }
     var messageElement = `<div class="chat">
-                           <span class="username">${message.username}</span>
+                           <span class="username" style="color:${textColor}">${_.escape(message.username).replace(/%20/g, '')}</span>
                            <br>
-                           <span class="chat-text">${message.text}</span>
+                           <span class="chat-text">${_.escape(message.text)}</span>
                          </div>`;
     $('#chats').append(messageElement);
     $('.username').unbind('click');
@@ -65,12 +72,17 @@ class App {
       app.handleUsernameClick(username);
     });
   }
-
-  renderRoom(message) {
-    app.rooms.push(message.roomname);
-    $('select').append(`<option value="${message.roomname}">
-                          ${message.roomname}
+  
+  addNewRoom(roomname) {
+    app.rooms.push(roomname);
+    $('select').append(`<option value="${roomname}">
+                          ${roomname}
                         </option>`);
+  }
+
+  renderRoom(roomname) {
+    app.options.where = {"roomname": roomname};
+    app.fetch();
   }
   
   handleSubmit(message) {
@@ -78,15 +90,28 @@ class App {
   }
   
   handleUsernameClick(username) {
-    // adds user to friends list
+    if (!app.friends.includes(username.target.innerHTML)) {
+      app.friends.push(username.target.innerHTML);
+    } else {
+      for (var i = 0; i < app.friends.length; i++) {
+        if (app.friends[i] === username.target.innerHTML) {
+          app.friends.splice(i);
+        }
+      }
+    }
+    app.fetch();
   }
 };
 
-var app = new App();
-app.init();
 
 $(document).ready(function() {
-  $("button").on('click', function() {
+  $("#newRoomButton").on('click', function() {
+    var newRoom = $('#newRoomInput').val();
+    $('#newRoomInput').val('');
+    app.addNewRoom(newRoom);
+  });
+
+  $("#submitButton").on('click', function() {
     var message = {};
     
     message.username = getUsername(window.location.href);
@@ -105,18 +130,53 @@ $(document).ready(function() {
 
     app.handleSubmit(message);
   });
+
+  $("#newRoomInput").on('keypress', function(key) {
+    if (key.which === 13) {
+      $(this).attr("disabled", "disabled");
+
+      var newRoom = $('#newRoomInput').val();
+      $('#newRoomInput').val('');
+      app.addNewRoom(newRoom);
+
+      $(this).removeAttr("disabled");
+    }
+  });
+
+  $("#messageInput").on('keypress', function(key) {
+    if (key.which === 13) {
+      $(this).attr("disabled", "disabled");
+
+      var message = {};
+      
+      message.username = getUsername(window.location.href);
+      message.text = getText();
+      message.roomname = getRoomname();
+
+      app.handleSubmit(message);
+
+      $(this).removeAttr("disabled");
+    }
+  });
+
+  $("select").change(function(roomname) {
+    app.renderRoom(roomname.target.value);
+  });
 });
+
 
 var getUsername = function(url) {
   for (var x = 0; x < url.length; x++) {
     if (url[x] === '?' && url[x + 9] === '=') {
-      return url.slice(x + 10, url.length);
+      return url.slice(x + 10, url.length).replace(/%20/g, ' ');
     }
   }
 };
 
 var getText = function() {
-  return $('input').val();
+  var msg = $('#messageInput').val();
+  $('#messageInput').val('');
+  return msg;
 };
 
 var getRoomname = function() {
@@ -128,13 +188,6 @@ var getRoomname = function() {
   }
 };
 
-var fixMessage = function(messageText) {
-  if (messageText === undefined || messageText === null) {
-    return '';
-  }
-  messageText = messageText.replace('<script', '');
-  messageText = messageText.replace('<SCRIPT', '');
-  messageText = messageText.replace('<style', '');
-  messageText = messageText.replace('<STYLE', '');
-  return messageText;
-}
+
+var app = new App();
+app.init();

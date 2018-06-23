@@ -28,12 +28,16 @@
       <h1>chatterbox</h1>
       <!-- Your HTML goes here! -->
       <form id="send">
+        Create new room:
+        <input type="text" id="newRoomInput">
+        <button type="button" class="submit" id="newRoomButton">Create</button>
+        <br><br>
         Select room:
         <select></select>
         <br><br>
         Type your message:
-        <input type="text">
-        <button type="button" class="submit">Submit</button>
+        <input type="text" id="messageInput">
+        <button type="button" class="submit" id="submitButton">Submit</button>
       </form>
     </div>
     <div id="chats"></div>
