@@ -2,3 +2,4 @@
 
 ## complete handleUsernameClick()
 ## auto refresh messages
+## handle enter on input
